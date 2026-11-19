@@ -1,0 +1,22 @@
+REGARDE ICI ! — PROTOTYPE POUR GALAXY Z FLIP6
+
+Ce prototype prend des photos avec la caméra arrière et tente d’afficher une animation sur un second écran. Le fonctionnement de l’écran externe du Flip6 reste à confirmer sur ton téléphone : Android / Samsung peut le bloquer, même avec le dernier logiciel.
+
+INSTALLER
+1. Transfère RegardeIci-prototype.apk sur ton Flip6.
+2. Ouvre le fichier depuis Mes fichiers et suis les instructions d’installation. Si demandé, autorise l’installation depuis cette source.
+3. Lance « Regarde ici ! » et autorise l’accès à la caméra.
+
+UTILISER
+1. Garde le téléphone ouvert avec les objectifs arrière dirigés vers l’enfant.
+2. Choisis « Animation : chat » pour changer de personnage ou importer une vidéo locale. La vidéo est lue sans son et en boucle.
+3. Appuie sur « Activer l’écran externe » et sélectionne l’écran proposé.
+4. Vérifie que l’animation apparaît réellement du côté de l’enfant. Le message « Animation envoyée » indique seulement qu’Android a accepté la fenêtre.
+5. Prends la photo avec le gros bouton ou une touche de volume. Les images apparaissent dans Galerie → RegardeIci.
+
+SI L’ÉCRAN EXTERNE RESTE NOIR
+Ouvre Aide → Diagnostic → Copier, puis envoie le texte dans cette conversation. Il indiquera le modèle, la version logicielle et ce que Samsung expose à l’application. Ce prototype ne peut pas forcer l’allumage de l’écran externe. Good Lock seul ne garantit pas l’usage simultané des deux écrans.
+
+Les trois personnages intégrés fonctionnent sans téléchargement. Aucun compte, publicité ou envoi des photos sur Internet. L’accès caméra s’arrête lorsque l’application quitte le premier plan.
+
+APK de développement : ce n’est pas encore une version validée sur un Flip6 réel.
