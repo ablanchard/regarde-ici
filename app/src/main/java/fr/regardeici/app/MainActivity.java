@@ -59,11 +59,13 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
     private Button shutter, flashButton, timerButton, screenButton, animationButton;
     private DisplayManager displays;
     private CoverPresentation presentation;
+    private NativeCoverController nativeCover;
     private ProcessCameraProvider cameraProvider;
     private Camera camera;
     private ImageCapture capture;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private boolean foreground, cameraStarting, cameraReady, busy, counting, wantsCover;
+    private boolean restoreNative;
     private int character, position, selectedDisplay=-1, remaining;
     private boolean timer, flash;
     private Uri clip;
@@ -98,8 +100,15 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
         character=prefs.getInt("character",0); position=prefs.getInt("position",0);
         timer=prefs.getBoolean("timer",false);
         String savedClip=prefs.getString("clip",null); if(savedClip!=null) clip=Uri.parse(savedClip);
-        if(state!=null) { selectedDisplay=state.getInt("display",-1); wantsCover=state.getBoolean("cover",false); }
+        if(state!=null) {
+            selectedDisplay=state.getInt("display",-1); wantsCover=state.getBoolean("cover",false);
+            restoreNative=state.getBoolean("nativeCover",false);
+        }
         buildUi();
+        nativeCover=new NativeCoverController(this,this::setCoverStatus,()->handler.post(()->{
+            clip=null;saveChoices();updateAnimation();
+        }));
+        nativeCover.setOnAreasChanged(this::restoreNativeIfReady);
         if(checkSelfPermission(Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED) startCamera();
         else permission.launch(Manifest.permission.CAMERA);
     }
@@ -142,11 +151,11 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
         root.addView(scroll,new LinearLayout.LayoutParams(-1,dp(landscape?154:280)));
         LinearLayout controls=new LinearLayout(this); controls.setOrientation(LinearLayout.VERTICAL);
         controls.setPadding(0,dp(10),0,0); scroll.addView(controls);
-        coverStatus=text("Écran externe : à tester sur ce téléphone",13,0xffcbd5cb);
+        coverStatus=text("Écran externe : animation arrêtée",13,0xffcbd5cb);
         coverStatus.setPadding(dp(12),dp(9),dp(12),dp(9)); coverStatus.setBackground(rounded(PANEL,12)); controls.addView(coverStatus);
         LinearLayout screens=row();
         screenButton=button("Activer l’écran externe",this::chooseDisplay); weighted(screens,screenButton);
-        screens.addView(button("Arrêter",()->{ wantsCover=false; dismissCover(); setCoverStatus("Animation arrêtée"); })); controls.addView(screens);
+        screens.addView(button("Arrêter",()->{ restoreNative=false; wantsCover=false; dismissCover(); nativeCover.stop(); setCoverStatus("Animation arrêtée"); })); controls.addView(screens);
         LinearLayout animations=row(); animationButton=button(clip==null?characterName():"Vidéo personnelle",this::chooseAnimation);
         weighted(animations,animationButton); animations.addView(button("Position",()->{
             position=(position+1)%3; saveChoices(); updateAnimation();
@@ -230,14 +239,16 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
     private void cancelCountdown() { handler.removeCallbacks(tick); counting=false; countdownLabel.setText(""); shutter.setEnabled(cameraReady && !busy); }
 
     private void chooseDisplay() {
+        restoreNative=false;
+        if(nativeCover.start(character,position,clip)) { wantsCover=false; return; }
         Display[] all=displays.getDisplays(); ArrayList<Display> candidates=new ArrayList<>();
         for(Display d:all) if(d.getDisplayId()!=getDisplay().getDisplayId()) candidates.add(d);
         if(candidates.isEmpty()) {
             wantsCover=false;
             lastDisplayError="Aucun second écran exposé par DisplayManager.";
             setCoverStatus("Écran externe inaccessible à l’application");
-            new AlertDialog.Builder(this).setTitle("Samsung ne propose aucun second écran")
-                .setMessage("L’application ne peut pas allumer elle-même l’écran externe du Flip6. Aucun second écran n’est exposé ici. Le mode photo reste utilisable. Le diagnostic permet de vérifier la compatibilité de ce téléphone.")
+            new AlertDialog.Builder(this).setTitle("Écran externe indisponible")
+                .setMessage("Le système ne propose ici ni activation native disponible ni écran secondaire accessible. Garde le téléphone ouvert et réessaie. Le mode photo reste utilisable. Le diagnostic permet de vérifier la compatibilité de cette version du système.")
                 .setPositiveButton("Diagnostic",(d,w)->showDiagnostic()).setNegativeButton("Fermer",null).show(); return;
         }
         String[] labels=new String[candidates.size()];
@@ -275,6 +286,7 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
     private void updateAnimation() {
         animationButton.setText(clip==null?characterName():"Vidéo personnelle");
         if(presentation!=null) presentation.update(character,position,clip);
+        if(nativeCover!=null) nativeCover.update(character,position,clip);
     }
     private String characterName() { return new String[]{"Animation : chat","Animation : canard","Animation : lapin"}[character]; }
     private void chooseAnimation() {
@@ -300,18 +312,19 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
     }
     private void showHelp() {
         new AlertDialog.Builder(this).setTitle("Une photo, un petit coucou")
-            .setMessage("1. Ouvrir le Flip6, objectifs arrière vers l’enfant.\n\n2. Choisir un personnage ou importer une vidéo locale.\n\n3. Toucher « Activer l’écran externe ». Vérifier que l’animation est bien visible côté enfant.\n\n4. Cadrer puis prendre la photo. Le bouton de volume déclenche aussi. Les photos restent dans la galerie du téléphone.\n\nPrototype : l’accès simultané aux deux écrans dépend d’Android et de Samsung. L’application ne peut pas forcer l’allumage de l’écran externe. Good Lock seul ne garantit pas ce fonctionnement.")
+            .setMessage("1. Ouvrir le Flip6, objectifs arrière vers l’enfant.\n\n2. Choisir un personnage ou importer une vidéo locale.\n\n3. Toucher « Activer l’écran externe ». L’application demande l’activation au système Android.\n\n4. Cadrer puis prendre la photo. Le bouton de volume déclenche aussi. Les photos restent dans la galerie du téléphone.\n\n« Arrêter » éteint l’animation et termine la session native. Quitter l’application ou verrouiller le téléphone termine également la session.\n\nL’activation native a été vérifiée sur un Galaxy Z Flip6 SM-F741B sous Android 17. Les autres versions du système peuvent se comporter différemment.")
             .setPositiveButton("Compris",null).setNeutralButton("Diagnostic",(d,w)->showDiagnostic()).show();
     }
     private String diagnostics() {
-        StringBuilder s=new StringBuilder("Regarde ici ! 0.1 — diagnostic\n");
+        StringBuilder s=new StringBuilder("Regarde ici ! "+BuildConfig.VERSION_NAME+" — diagnostic\n");
         s.append(Build.MANUFACTURER).append(' ').append(Build.MODEL).append("\nAndroid ").append(Build.VERSION.RELEASE)
             .append(" / API ").append(Build.VERSION.SDK_INT).append("\nBuild ").append(Build.DISPLAY).append('\n');
         s.append("Affichage de l’activité : ").append(getDisplay().getDisplayId()).append('\n');
         for(Display d:displays.getDisplays()) s.append("Écran ").append(d.getDisplayId()).append(" : ").append(d.getName())
             .append(" / ").append(stateName(d)).append(" / flags 0x").append(Integer.toHexString(d.getFlags())).append('\n');
         s.append("Écrans compatibles Presentation : ").append(displays.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION).length)
-            .append("\nDernier essai : ").append(lastDisplayError);
+            .append("\nDernier essai : ").append(lastDisplayError)
+            .append('\n').append(nativeCover.diagnostics());
         return s.toString();
     }
     private void showDiagnostic() {
@@ -330,12 +343,20 @@ public final class MainActivity extends ComponentActivity implements DisplayMana
         super.onResume();
         if(checkSelfPermission(Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED && camera==null) startCamera();
     }
-    @Override protected void onStop() {
-        foreground=false; cancelCountdown(); displays.unregisterDisplayListener(this); dismissCover();
-        setCoverStatus(wantsCover?"Animation suspendue":"Écran externe : à tester sur ce téléphone"); super.onStop();
+    private void restoreNativeIfReady() {
+        if(restoreNative && foreground && hasWindowFocus() && nativeCover!=null
+                && nativeCover.start(character,position,clip)) restoreNative=false;
     }
-    @Override protected void onDestroy() { handler.removeCallbacksAndMessages(null); super.onDestroy(); }
+    @Override public void onWindowFocusChanged(boolean focused) {
+        super.onWindowFocusChanged(focused);if(focused) restoreNativeIfReady();
+    }
+    @Override protected void onStop() {
+        foreground=false; cancelCountdown(); displays.unregisterDisplayListener(this); dismissCover(); nativeCover.stop();
+        setCoverStatus(wantsCover?"Animation suspendue":"Écran externe : animation arrêtée"); super.onStop();
+    }
+    @Override protected void onDestroy() { if(nativeCover!=null) nativeCover.dispose(); handler.removeCallbacksAndMessages(null); super.onDestroy(); }
     @Override protected void onSaveInstanceState(Bundle state) {
+        state.putBoolean("nativeCover",restoreNative || (nativeCover!=null && nativeCover.isRequested()));
         state.putInt("display",selectedDisplay); state.putBoolean("cover",wantsCover); super.onSaveInstanceState(state);
     }
     @Override public void onDisplayAdded(int id) { if(id==selectedDisplay) connectCover(); }

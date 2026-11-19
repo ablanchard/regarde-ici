@@ -1,22 +1,22 @@
-REGARDE ICI ! — PROTOTYPE POUR GALAXY Z FLIP6
+REGARDE ICI ! — V0.2 POUR GALAXY Z FLIP6
 
-Ce prototype prend des photos avec la caméra arrière et tente d’afficher une animation sur un second écran. Le fonctionnement de l’écran externe du Flip6 reste à confirmer sur ton téléphone : Android / Samsung peut le bloquer, même avec le dernier logiciel.
+Photographier les enfants avec la caméra arrière pendant qu’un personnage ou une vidéo attire leur regard sur l’écran externe.
 
-INSTALLER
-1. Transfère RegardeIci-prototype.apk sur ton Flip6.
-2. Ouvre le fichier depuis Mes fichiers et suis les instructions d’installation. Si demandé, autorise l’installation depuis cette source.
-3. Lance « Regarde ici ! » et autorise l’accès à la caméra.
+INSTALLER OU METTRE À JOUR
+1. Télécharger RegardeIci-prototype.apk sur le téléphone.
+2. Ouvrir le fichier depuis Mes fichiers et suivre les instructions d’installation. Si demandé, autoriser l’installation depuis cette source.
+3. Lancer « Regarde ici ! » et autoriser la caméra.
 
 UTILISER
-1. Garde le téléphone ouvert avec les objectifs arrière dirigés vers l’enfant.
-2. Choisis « Animation : chat » pour changer de personnage ou importer une vidéo locale. La vidéo est lue sans son et en boucle.
-3. Appuie sur « Activer l’écran externe » et sélectionne l’écran proposé.
-4. Vérifie que l’animation apparaît réellement du côté de l’enfant. Le message « Animation envoyée » indique seulement qu’Android a accepté la fenêtre.
-5. Prends la photo avec le gros bouton ou une touche de volume. Les images apparaissent dans Galerie → RegardeIci.
+1. Garder le téléphone ouvert, objectifs arrière dirigés vers l’enfant.
+2. Choisir « Animation : chat » pour changer de personnage ou importer une vidéo locale. La vidéo est lue sans son et en boucle.
+3. Toucher « Activer l’écran externe ». L’application demande l’activation à Android et affiche l’animation sur le petit écran.
+4. Prendre la photo avec le gros bouton ou une touche de volume. Les images apparaissent dans Galerie → RegardeIci.
+5. Toucher « Arrêter » pour terminer l’animation. Quitter l’application ou verrouiller le téléphone termine aussi la session native.
+
+Aucun câble USB, root, Shizuku ou Good Lock n’est nécessaire sur le Galaxy Z Flip6 SM-F741B sous Android 17 utilisé pour les essais. Cette configuration a permis l’activation native des deux écrans. Les autres modèles et versions du système restent à vérifier.
 
 SI L’ÉCRAN EXTERNE RESTE NOIR
-Ouvre Aide → Diagnostic → Copier, puis envoie le texte dans cette conversation. Il indiquera le modèle, la version logicielle et ce que Samsung expose à l’application. Ce prototype ne peut pas forcer l’allumage de l’écran externe. Good Lock seul ne garantit pas l’usage simultané des deux écrans.
+Garder le téléphone ouvert, puis réessayer. Ouvrir Aide → Diagnostic → Copier si le problème persiste. Le diagnostic indique les capacités natives et les écrans disponibles ; il ne contient pas de photo.
 
-Les trois personnages intégrés fonctionnent sans téléchargement. Aucun compte, publicité ou envoi des photos sur Internet. L’accès caméra s’arrête lorsque l’application quitte le premier plan.
-
-APK de développement : ce n’est pas encore une version validée sur un Flip6 réel.
+Aucun compte, publicité ou envoi de photos sur Internet. APK signé pour le développement.
